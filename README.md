@@ -22,7 +22,7 @@ AnacondaのPythonをインストール。3系の最新版をインストール�
 conda create -n CriptoTrade python=3.5.6
 conda activate CriptoTrade
 (以下同様)
-pip install -r requirements.txt
+pip install -r requirements_gpu.txt
 ```
 
 ## ディレクトリの説明
@@ -59,8 +59,10 @@ pip install -r requirements.txt
 └── Trash
     └── requirements_cpu_old.txt
 ```
-- DATAディレクトリ・・・過去2年分程度の5分刻みの仮想通貨(BitCoin,Ethreum,LiteCoin,Monero)の価格データがあります。
-
+- DATA/ 過去2年分程度の5分刻みの仮想通貨(BitCoin,Ethreum,LiteCoin,Monero)の価格データがあります。
+- GetHistoricalData/ ヒストリカルデータをpoloniexから取得するためのスクリプトがあります。
+- TrainExample/ tomouenoが学習に使用したサンプルのソースコードがあります。
+- TrainExample/trade_class.py 簡易的な取引のエミュレータがあります。手数料を加味して、単純に資産の増減を表示する程度ですが、αやβなどの指数を出す機能も今後は実装したいです。
 ## 引用文献・参考文献
 - 「Poloniex - Crypto Asset Exchange」(https://poloniex.com/)
 - 「ChainerRL Visualizer」(https://github.com/chainer/chainerrl-visualizer)
