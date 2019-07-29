@@ -33,7 +33,7 @@ class TradeClass(object):
     def ReadPoloniexCSV(self):
         import csv
         history_data=[]
-        with open('../../DATA/USDT_BTC_0.csv', 'r') as f:
+        with open('../../../DATA/USDT_BTC_0.csv', 'r') as f:
             reader=csv.reader(f,delimiter=',')
             next(reader)
             for row in reader:
