@@ -1,4 +1,8 @@
 #coding: utf-8
+'''
+MITライセンス　このプログラムについては、改変・再配布可能です
+作者： Tomohiro Ueno 
+'''
 import chainer
 #import chainer.functions as F
 #import chainer.links as L
