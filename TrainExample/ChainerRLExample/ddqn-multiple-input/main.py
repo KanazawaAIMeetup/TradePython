@@ -1,7 +1,7 @@
 #coding: utf-8
 '''
 MITライセンス　このプログラムについては、改変・再配布可能です
-作者： Tomohiro Ueno 
+著作者： Tomohiro Ueno (kanazawaaimeetup@gmail.com)
 '''
 import chainer
 #import chainer.functions as F
@@ -26,6 +26,7 @@ import random
 import sys,os,copy,traceback
 from trade_class import TradeClass
 from trade_class import buy_simple, sell_simple, pass_simple
+from trade_class import SellAndCalcAmoutUsingPrediction,BuyAndCalcAmoutUsingPrediction
 cp = cuda.cupy
 from sklearn import preprocessing
 ss = preprocessing.StandardScaler()
@@ -62,7 +63,6 @@ for idx in range(input_price_len, len(price_data)-test_term):
 X_test = []
 y_test = []
 for idx in range(len(price_data)-test_term,len(price_data)):
-    #X_train.append(np.flipud(training_set_scaled[i-60:i]))
     X_test.append(standarization(price_data[idx - input_price_len:idx]))
     y_test.append(price_data[idx])
 
@@ -231,7 +231,7 @@ for episode in range(0,5):
                 tradecl.draw_trading_view()
             except:
                 pass
-            agent.save('chainerRLTradeAgent')
+            agent.save('chainerRLAgent-Dense')
     #インデントこれであってる
     buy_sell_num_flag = [1.0, 0.0, abs(buy_sell_count)] if buy_sell_count >= 1 else [0.0, 1.0, abs(buy_sell_count)]
     agent.stop_episode_and_train(X_train[-1]+buy_sell_num_flag, reward, True)#エピソード（価格データの最初から最後までを辿ること）を一旦停止
@@ -281,13 +281,12 @@ for idx in range(0, len(y_test)):
 
 pass_count=0
 
-print("==========================================")
-print("Test END")
-print("pass：　合計" + str(pass_count) + "回")
-print("ある回数の予測において、終わった後のbuy_sell_count" + str(buy_sell_count) + "回"+ "　買いの回数が多い" if buy_sell_count > 0 else "　売りの回数が多い")
-print("Initial MONEY" + str(first_total_money))
+print("====================TEST======================")
+print("START MONEY" + str(first_total_money))
 print("FINAL MONEY:" + str(total_money))
-print(os.path.basename(__file__))
+print("pass_count：" + str(pass_count))
+print("buy_sell_count(at the end of TEST):" + str(buy_sell_count))
+print("buy_sell_fee:" + str(buy_sell_fee))
 
 #matploblibでトレードの結果をグラフで可視化
 try:

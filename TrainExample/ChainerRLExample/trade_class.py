@@ -1,10 +1,7 @@
 #coding: utf-8
 '''
-default:2239.65016075
-after:2436.87876149
-##0.4 40%
-635.385700015
-711.099316173
+MITライセンス　このプログラムについては、改変・再配布可能です
+著作者： Tomohiro Ueno (kanazawaaimeetup@gmail.com)
 '''
 
 import numpy as np
@@ -18,13 +15,10 @@ import matplotlib.pyplot as plt
 
 
 class TradeClass(object):
-
-
     def __init__(self):
         self.trade_history = []
         self.price_history = []
-        self.transaction_fee = 0.0015
-        self.buy_sell_fee = 0.0015
+        self.transaction_fee = 0.0001 #取引手数料。この場合0.01%としたが、自由に変えて良い。
 
     def read_cripto_watch_json(self):
         f = open('../DATA/Min-2017-6-1.json', 'r')
@@ -80,7 +74,7 @@ class TradeClass(object):
     def buy_simple(self,money, ethereum, total_money, current_price):
         first_money, first_ethereum, first_total_money = money, ethereum, total_money
         spend = money * 0.1#資産全体の１割を
-        money -= spend * (1+self.buy_sell_fee)
+        money -= spend * (1+self.transaction_fee)
         if money <= 0.0:
             return first_money,first_ethereum,first_total_money
 
@@ -92,7 +86,7 @@ class TradeClass(object):
     def sell_simple(self,money, ethereum, total_money, current_price):
             first_money, first_ethereum, first_total_money = money, ethereum, total_money
             spend = ethereum * 0.1
-            ethereum -= spend * (1+self.buy_sell_fee)
+            ethereum -= spend * (1+self.transaction_fee)
             if ethereum <= 0.0:
                 return first_money,first_ethereum,first_total_money
 
@@ -103,21 +97,6 @@ class TradeClass(object):
     def pass_simple(self,money,ethereum,total_money,current_price):
         total_money = money + float(ethereum * current_price)
         return money,ethereum,total_money
-
-    
-    def buy(self,pred,money, ethereum, total_money, current_price):
-        first_money,first_ethereum,first_total_money = money,ethereum,total_money
-        if abs(pred) < 0.0:
-            return first_money, first_ethereum, first_total_money
-        spend = abs(money * 0.05)
-        money -= spend * 1.0000#1.0015
-        if money < 0:#もしも資産がマイナスになるようだったら、取引しない。
-            return first_money,first_ethereum,first_total_money
-        ethereum += float(spend / current_price)
-        total_money = money + ethereum * current_price
-
-        return money, ethereum, total_money
-
 
     def SellAndCalcAmoutUsingPrediction(self,pred,money, ethereum, total_money, current_price):
         first_money, first_ethereum, first_total_money = money, ethereum, total_money
@@ -145,10 +124,12 @@ class TradeClass(object):
 
         return money, ethereum, total_money
 
+    def PassUsingPrediction(self, pred, money, ethereum, total_money, current_price):
+        first_money, first_ethereum, first_total_money = money, ethereum, total_money
+        return first_money,first_ethereum,first_total_money
 
-    # 配列の長さバグかも
-    #0.0001だけだと＋30
-    #0.001*predで+200ドル
+    # 配列の長さに気をつける。
+    #実験結果：何割の資産を取引に使うかについて、0.01%だけだと＋30ドル 0.1%*pred(予測値によって取引量を変える)で+200ドル
     def simulate_trade(self,price, X_test, model):
         money = 300
         ethereum = 0.01
@@ -162,11 +143,11 @@ class TradeClass(object):
             pred = prediction[0]
             if pred > 0:
                 print("buy")
-                money, ethereum, total_money = self.buy_simple(pred,money, ethereum, total_money, current_price)
+                money, ethereum, total_money = self.BuyAndCalcAmoutUsingPrediction(pred,money, ethereum, total_money, current_price)
                 print("money"+str(money))
             elif pred <= 0:
                 print("sell")
-                money, ethereum, total_money = self.sell_simple(pred,money, ethereum, total_money, current_price)
+                money, ethereum, total_money = self.SellAndCalcAmoutUsingPrediction(pred,money, ethereum, total_money, current_price)
                 print("money"+str(money))
         print("FIRST"+str(first_total_money))
         print("FINAL" + str(total_money))
