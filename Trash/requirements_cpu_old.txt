@@ -93,7 +93,7 @@ python-dateutil==2.7.3
 pytz==2018.4
 PyYAML==3.12
 pyzmq==17.1.0
-requests==2.19.1
+requests==2.20.0
 requests-file==1.4.3
 requests-ftp==0.3.1
 scikit-learn==0.19.1
