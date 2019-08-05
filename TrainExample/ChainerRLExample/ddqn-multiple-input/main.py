@@ -2,7 +2,14 @@
 '''
 MITライセンス　このプログラムについては、改変・再配布可能です
 著作者： Tomohiro Ueno (kanazawaaimeetup@gmail.com)
+
+Usage: ddqn-multiple-inputディレクトリから実行する。
+python main.py
 '''
+import sys, os
+sys.path.append("..")
+sys.path.append("../..")
+
 import chainer
 #import chainer.functions as F
 #import chainer.links as L
@@ -25,8 +32,6 @@ import numpy as np
 import random
 import sys,os,copy,traceback
 from trade_class import TradeClass
-from trade_class import buy_simple, sell_simple, pass_simple
-from trade_class import SellAndCalcAmoutUsingPrediction,BuyAndCalcAmoutUsingPrediction
 cp = cuda.cupy
 from sklearn import preprocessing
 ss = preprocessing.StandardScaler()
@@ -173,14 +178,14 @@ def action_if(action,buy_sell_count,pass_count,money,ethereum,total_money,curren
     if action == 0:
         #Buy
         buy_sell_count += 1
-        money, ethereum, total_money = buy_simple(money, ethereum, total_money, current_price)
+        money, ethereum, total_money = tradecl.buy_simple(money, ethereum, total_money, current_price)
     elif action == 1:
         #Sell
         buy_sell_count -= 1
-        money, ethereum, total_money = sell_simple(money, ethereum, total_money, current_price)
+        money, ethereum, total_money = tradecl.sell_simple(money, ethereum, total_money, current_price)
     elif action == 2:
         #PASS
-        money, ethereum, total_money = pass_simple(money, ethereum, total_money, current_price)
+        money, ethereum, total_money = tradecl.pass_simple(money, ethereum, total_money, current_price)
         pass_count += 1
 
     total_money=money+ethereum*current_price
