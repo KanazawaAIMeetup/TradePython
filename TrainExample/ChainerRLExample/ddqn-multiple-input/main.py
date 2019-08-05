@@ -21,7 +21,7 @@ import numpy as np
 import random
 import sys,os,copy,traceback
 from trade_class import TradeClass
-
+from trade_class import buy_simple, sell_simple, pass_simple
 cp = cuda.cupy
 from sklearn import preprocessing
 ss = preprocessing.StandardScaler()
@@ -34,26 +34,13 @@ np.set_printoptions(threshold=np.inf)
 print("price_data idx 0-10"+str(price_data[0:10]))
 print("price_data idx last 10"+str(price_data[-1]))
 
-'''
-def getDataPoloniex():
-    polo = poloniex.Poloniex()
-    polo.timeout = 10
-    chartUSDT_BTC = polo.returnChartData('USDT_BTC', period=300, start=time.time() - 1440 * 60 * 500, end=time.time())  # 1440(min)*60(sec)=DAY
-    tmpDate = [chartUSDT_BTC[i]['date'] for i in range(len(chartUSDT_BTC))]
-    date = [datetime.datetime.fromtimestamp(tmpDate[i]) for i in range(len(tmpDate))]
-    data = [float(chartUSDT_BTC[i]['open']) for i in range(len(chartUSDT_BTC))]
-    return date, data
-'''
-
-#time_date, price_data = getDataPoloniex()
-
 input_price_len=400
 input_discrete_value_size=3
 total_input_size = input_price_len+input_discrete_value_size
 n_actions=3
 
 #obs_size = input_len+n_actions#shape#env.observation_space.shape[0]
-
+#データを標準化して、ディープラーニングで学習しやすくする。
 def standarization(x, axis = None):
     x=np.array(x)
     x2 = x - x.mean()
@@ -75,6 +62,7 @@ for idx in range(len(price_data)-test_term,len(price_data)):
     X_test.append(standarization(price_data[idx - input_price_len:idx]))
     y_test.append(price_data[idx])
 
+# 時系列データを単純に全結合層に入れるモデル
 class QFunction(chainer.Chain):
     def __init__(self, obs_size, n_actions, n_hidden_channels=500,input_price_len=input_price_len, n_discrete_size=input_discrete_value_size):
         super(QFunction, self).__init__(
@@ -156,43 +144,13 @@ agent = chainerrl.agents.DoubleDQN(
 def env_execute(action,current_price,next_price,cripto_amount,usdt_amount):
 
     return reward
-#one_percent=0.01
-buy_sell_fee = 0.0#0.0001#0.01%の手数料#one_percent*0.000001
-def buy_simple(money, ethereum, total_money, current_price):
-        first_money, first_ethereum, first_total_money = money, ethereum, total_money
-        spend = money * 0.1
-        money -= spend * (1+buy_sell_fee)
-        if money <= 0.0:
-            return first_money,first_ethereum,first_total_money
 
-        ethereum += float(spend / current_price)
-        total_money = money + ethereum * current_price
-
-        return money, ethereum, total_money
-
-def sell_simple(money, ethereum, total_money, current_price):
-        first_money, first_ethereum, first_total_money = money, ethereum, total_money
-        spend = ethereum * 0.1
-        ethereum -= spend * (1+buy_sell_fee)
-        if ethereum <= 0.0:
-            return first_money,first_ethereum,first_total_money
-
-        money += float(spend * current_price)
-        total_money = money + float(ethereum * current_price)
-
-        return money, ethereum, total_money
-def pass_simple(money,ethereum,total_money,current_price):
-    total_money = money + float(ethereum * current_price)
-    return money,ethereum,total_money
 try:
   agent.load('chainerRLAgent')
 except:
     print("Agent load failed")
 
-
-
-#トレーニング
-#放っておいてtotal_priceが上がることもある。今のプログラムだと放っておいても値段変わらない
+#取引を何もしなくても価格の変化に応じて資産が増減するようにする
 def reset_info():
     reward=0
     money = 300
@@ -201,23 +159,23 @@ def reset_info():
     total_money = money + np.float64(y_train[0] * ethereum)
     first_total_money = total_money
     pass_count=0
-    buy_sell_count=0#buy+ sell -
+    buy_sell_count=0
     pass_renzoku_count=0
-
 
     return reward,money,before_money,ethereum,total_money,first_total_money,pass_count,buy_sell_count,pass_renzoku_count
 
 def action_if(action,buy_sell_count,pass_count,money,ethereum,total_money,current_price):
+    #buy_simple, sell_simple, pass_simple関数は一階層上のtrade_class.py参照。
     if action == 0:
-        # print("buy")
+        #Buy
         buy_sell_count += 1
         money, ethereum, total_money = buy_simple(money, ethereum, total_money, current_price)
     elif action == 1:
-        # print("sell")
+        #Sell
         buy_sell_count -= 1
         money, ethereum, total_money = sell_simple(money, ethereum, total_money, current_price)
     elif action == 2:
-        # print("PASS")
+        #PASS
         money, ethereum, total_money = pass_simple(money, ethereum, total_money, current_price)
         pass_count += 1
 
@@ -225,24 +183,17 @@ def action_if(action,buy_sell_count,pass_count,money,ethereum,total_money,curren
 
     return buy_sell_count, pass_count, money, ethereum, total_money
 
-def action_if(action,buy_sell_count,pass_count,money,ethereum,total_money,current_price):
-    if action == 0:
-        # print("buy")
-        buy_sell_count += 1
-        money, ethereum, total_money = buy_simple(money, ethereum, total_money, current_price)
-    elif action == 1:
-        # print("sell")
-        buy_sell_count -= 1
-        money, ethereum, total_money = sell_simple(money, ethereum, total_money, current_price)
-    elif action == 2:
-        # print("PASS")
-        money, ethereum, total_money = pass_simple(money, ethereum, total_money, current_price)
-        pass_count += 1
-
-    total_money=money+ethereum*current_price
-
-    return buy_sell_count, pass_count, money, ethereum, total_money
-
+'''
+reward: 強化学習のトレーニングに必要な報酬
+money: 現在の総資産(スタート時は300ドルなど任意の値で初期化)
+before_money: 1ステップ前の資産
+ehereum: 資産として保持している仮想通貨の量
+total_money: 法定通貨と仮想通貨両方を合計した現在の総資産
+first_total_money: スタート時の総資産　運用成績を評価するために使用
+pass_count:　何回売買をせずに見送ったか。passをした合計回数を記録
+#buy_sell_count: 今までの取引の中でBuyとSellにどれだけ偏りがあるかを表す数。Buyされる度に+1,Sellされる度に-1される。つまり、正数の場合はBuyばかりされていて、負数の場合はSellばかりされている。
+pass_renzoku_count: 取引せずに見送るPassを何回連続で行なったか。学習の状況や取引を可視化するために作成した。
+'''
 reward, money, before_money, ethereum, total_money, first_total_money, pass_count, buy_sell_count, pass_renzoku_count = reset_info()
 for episode in range(0,5):
     reward, money, before_money, ethereum, total_money, first_total_money, pass_count, buy_sell_count, pass_renzoku_count = reset_info()
@@ -259,36 +210,37 @@ for episode in range(0,5):
         tradecl.update_trading_view(current_price, action)
         reward=0
 
-        buy_sell_count, pass_count, money, ethereum, ethereum, total_money = \
+        buy_sell_count, pass_count, money, ethereum, total_money = \
             action_if(action,buy_sell_count,pass_count,money,ethereum,total_money,current_price)
 
         reward += 0.01 * (total_money - before_money)  # max(current_price-bought_price,0)##
         before_money = total_money
 
-        if False:#idx % 5000 == 500:
-            print("BEGGINING MONEY:"+str(first_total_money))
+        if False:#idx % 5000 == 500:#学習状況の可視化のためのツール　普段はFalseにする。
+            print("Initial MONEY:"+str(first_total_money))
             print("Current Total MONEY:" + str(total_money))
-            print("1000回中passは"+str(pass_count)+"回")
-            print("1000回終わった後のbuy_sell_countは" + str(buy_sell_count) + "回")
+            print("ある回数の予測において、Passは"+str(pass_count)+"回")
+            print("ある回数の予測において、終わった後のbuy_sell_count:" + str(buy_sell_count) + "回"+ "(買いの回数が多い)" if buy_sell_count > 0 else "(売りの回数が多い)")
             pass_count=0
             try:
+                #matplotlib(GUI)でどのタイミングで売買を行なっているか可視化。
                 tradecl.draw_trading_view()
             except:
                 pass
-            agent.save('chainerRLAgent')
-    #インデントこれであってるから変更しないこと。
+            agent.save('chainerRLTradeAgent')
+    #インデントこれであってる
     buy_sell_num_flag = [1.0, 0.0, abs(buy_sell_count)] if buy_sell_count >= 1 else [0.0, 1.0, abs(buy_sell_count)]
-    agent.stop_episode_and_train(X_train[-1]+buy_sell_num_flag, reward, True)
-    #buy_sell_fee=buy_sell_fee*10 #TODO #強化学習の初期では少ない手数料で、少しずつ増やしていく
+    agent.stop_episode_and_train(X_train[-1]+buy_sell_num_flag, reward, True)#エピソード（価格データの最初から最後までを辿ること）を一旦停止
+    #強化学習の初期では少ない手数料で、学習後半には手数料を少しずつ増やしていく
 
 print("Training END")
-print("passは" + str(pass_count) + "回")
-print("終わった後のbuy_sell_countは" + str(buy_sell_count) + "回")
+print("Passは" + str(pass_count) + "回")
+print("ある回数の予測において、終わった後のbuy_sell_count" + str(buy_sell_count) + "回"+ "　買いの回数が多い" if buy_sell_count > 0 else "　売りの回数が多い")
 
-print("START MONEY" + str(first_total_money))
+print("Initial MONEY" + str(first_total_money))
 print("FINAL MONEY:" + str(total_money))
 # Save an agent to the 'agent' directory
-agent.save('chainerRLAgentFinal-reward-bug-modify')
+agent.save('chainerRLAgentFinal-Dense')
 
 '''
 ACTION_MEANINGS = {
@@ -311,27 +263,29 @@ launch_visualizer(
 #print(traceback.format_exc())
 
 reward, money, before_money, ethereum, total_money, first_total_money, pass_count, buy_sell_count, pass_renzoku_count = reset_info()
-tradecl.reset_trading_view()
+tradecl.reset_trading_view()#グラフの描画をリセットする
 for idx in range(0, len(y_test)):
-    current_price = y_test[idx]#重要
+    current_price = y_test[idx]#添字間違えないように
     buy_sell_num_flag = [1.0, 0.0, abs(buy_sell_count)] if buy_sell_count >= 1 else [0.0, 1.0, abs(buy_sell_count)]
     state_data = np.array(X_test[idx] + buy_sell_num_flag, dtype='f')
     action = agent.act(state_data)  # 教師が入力に入らないように。
     tradecl.update_trading_view(current_price, action)
-    buy_sell_count, pass_count, money, ethereum, ethereum, total_money = \
+    buy_sell_count, pass_count, money, ethereum, total_money = \
             action_if(action,buy_sell_count,pass_count,money,ethereum,total_money,current_price)
+    #buy_sell_count, pass_count, money, ethereum, total_money
     before_money = total_money
 
 pass_count=0
 
 print("==========================================")
-print("pass：" + str(pass_count) + "回")
-print("終わった後のbuy_sell_countは" + str(buy_sell_count) + "回")
 print("Test END")
-print("START MONEY" + str(first_total_money))
+print("pass：　合計" + str(pass_count) + "回")
+print("ある回数の予測において、終わった後のbuy_sell_count" + str(buy_sell_count) + "回"+ "　買いの回数が多い" if buy_sell_count > 0 else "　売りの回数が多い")
+print("Initial MONEY" + str(first_total_money))
 print("FINAL MONEY:" + str(total_money))
 print(os.path.basename(__file__))
 
+#matploblibでトレードの結果をグラフで可視化
 try:
     tradecl.draw_trading_view()
 except:

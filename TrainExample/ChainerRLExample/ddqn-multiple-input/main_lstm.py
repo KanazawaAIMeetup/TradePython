@@ -102,7 +102,7 @@ class QFunction(chainer.Chain, RecurrentChainMixin):
         """
 
         #x = np.asarray(x, dtype=cp.float32)
-        x_price_shape = x[:, :-3].shape
+        #x_price_shape = x[:, :-3].shape
         if x.shape == (1, total_input_size):
             #print(x[:, :-3].shape)
             if True:#self.first_flag:
@@ -273,7 +273,7 @@ def print_info_interval(first_total_money, total_money, pass_count, buy_sell_cou
         tradecl.draw_trading_view()
     except:
         pass
-    agent.save('chainerRLAgent')
+    agent.save('chainerRLAgent-LSTM')
 
 
 reward, money, before_money, ethereum, total_money, first_total_money, pass_count, buy_sell_count = reset_info()

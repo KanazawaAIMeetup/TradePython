@@ -21,9 +21,10 @@ class TradeClass(object):
 
 
     def __init__(self):
-        self.trade_history=[]
-        self.price_history=[]
-
+        self.trade_history = []
+        self.price_history = []
+        self.transaction_fee = 0.0015
+        self.buy_sell_fee = 0.0015
 
     def read_cripto_watch_json(self):
         f = open('../DATA/Min-2017-6-1.json', 'r')
@@ -49,7 +50,6 @@ class TradeClass(object):
             next(reader)  # ヘッダーを読み飛ばしたい時
             for row in reader:
                 history_data.append(float(row[1]))
-                #print(float(row[1]))
             return history_data
 
     def GetDataPoloniex(self):
@@ -77,56 +77,71 @@ class TradeClass(object):
             X.append([float(val/original) for val in Xtrain])
         return X
 
-    #+30ドル
+    def buy_simple(self,money, ethereum, total_money, current_price):
+        first_money, first_ethereum, first_total_money = money, ethereum, total_money
+        spend = money * 0.1#資産全体の１割を
+        money -= spend * (1+self.buy_sell_fee)
+        if money <= 0.0:
+            return first_money,first_ethereum,first_total_money
+
+        ethereum += float(spend / current_price)
+        total_money = money + ethereum * current_price
+
+        return money, ethereum, total_money
+
+    def sell_simple(self,money, ethereum, total_money, current_price):
+            first_money, first_ethereum, first_total_money = money, ethereum, total_money
+            spend = ethereum * 0.1
+            ethereum -= spend * (1+self.buy_sell_fee)
+            if ethereum <= 0.0:
+                return first_money,first_ethereum,first_total_money
+
+            money += float(spend * current_price)
+            total_money = money + float(ethereum * current_price)
+
+            return money, ethereum, total_money
+    def pass_simple(self,money,ethereum,total_money,current_price):
+        total_money = money + float(ethereum * current_price)
+        return money,ethereum,total_money
+
+    
     def buy(self,pred,money, ethereum, total_money, current_price):
         first_money,first_ethereum,first_total_money = money,ethereum,total_money
         if abs(pred) < 0.0:
             return first_money, first_ethereum, first_total_money
         spend = abs(money * 0.05)
         money -= spend * 1.0000#1.0015
-        if money < 0:
+        if money < 0:#もしも資産がマイナスになるようだったら、取引しない。
             return first_money,first_ethereum,first_total_money
         ethereum += float(spend / current_price)
         total_money = money + ethereum * current_price
 
         return money, ethereum, total_money
 
-    def sell(self,pred,money, ethereum, total_money, current_price):
-        first_money, first_ethereum, first_total_money = money, ethereum, total_money
 
-        if abs(pred) <0.0:
-            return first_money, first_ethereum, first_total_money
-        spend = abs(ethereum * 0.05)
-        ethereum -= spend * 1.0000#1.0015
-
-        if ethereum < 0.0:
-            return first_money,first_ethereum,first_total_money
-        money += float(spend * current_price)
-        total_money = money + float(ethereum * current_price)
-
-        return money, ethereum, total_money
-    #abs(pred)にすること！
-    def buy_simple(self,pred,money, ethereum, total_money, current_price):
-        first_money, first_ethereum, first_total_money = money, ethereum, total_money
-        spend = money * 0.5 * (abs(pred)*0.1)
-        money -= spend * 1.0000
-        if money < 0.0 or abs(pred) < 0.5:
-            return first_money,first_ethereum,first_total_money
-
-        ethereum += float(spend / current_price)
-        total_money = money + ethereum * current_price
-
-        return money, ethereum, total_money
-
-    def sell_simple(self,pred,money, ethereum, total_money, current_price):
+    def SellAndCalcAmoutUsingPrediction(self,pred,money, ethereum, total_money, current_price):
         first_money, first_ethereum, first_total_money = money, ethereum, total_money
         spend = ethereum * 0.5 * (abs(pred)*0.1)
-        ethereum -= spend * 1.0000
-        if ethereum < 0.0 or abs(pred) < 0.2:
+        ethereum -= spend * (1.0+self.transaction_fee)#取引手数料も含めていくら分購入したかを計算。
+        if ethereum < 0.0 or abs(pred) < 0.5:##資産がマイナスになる or 予測に自信がない場合
+            #何もしない
             return first_money,first_ethereum,first_total_money
 
-        money += float(spend * current_price)
-        total_money = money + float(ethereum * current_price)
+        money += float(spend * current_price)#仮想通貨を売却した分、法定通貨が増える。
+        total_money = money + float(ethereum * current_price)#仮想通貨と法定通貨両方を合計した資産を計算
+
+        return money, ethereum, total_money
+    
+    def BuyAndCalcAmoutUsingPrediction(self,pred,money, ethereum, total_money, current_price):
+        first_money, first_ethereum, first_total_money = money, ethereum, total_money
+        spend = money * (abs(pred)*0.05)#資産全体の何割を一回の取引に使うか abs(pred)にすると便利
+        money -= spend * (1.0+self.transaction_fee)#取引手数料も含めていくら分購入したかを計算。
+        if money < 0.0 or abs(pred) < 0.5:#資産がマイナスになる or 予測に自信がない場合
+            #何もしない
+            return first_money,first_ethereum,first_total_money
+
+        ethereum += float(spend / current_price)#法定通貨を消費した分、仮想通貨が増える。
+        total_money = money + ethereum * current_price#仮想通貨と法定通貨両方を合計した資産を計算
 
         return money, ethereum, total_money
 
