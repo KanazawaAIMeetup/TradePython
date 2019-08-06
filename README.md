@@ -34,33 +34,37 @@ pip install -r requirements_gpu.txt
 
 
 ```
+.
 ├── DATA
-│   ├── USDT_BTC_0.csv
-│   ├── USDT_BTC_7-25.csv
-│   ├── USDT_ETH_0.csv
-│   ├── USDT_ETH_7-25.csv
-│   ├── USDT_LTC_0.csv
-│   ├── USDT_LTC_7-25.csv
-│   ├── USDT_XMR_0.csv
-│   └── USDT_XMR_7-25.csv
+│   ├── USDT_BTC_LATEST.csv
+│   ├── USDT_ETH_LATEST.csv
+│   ├── USDT_LTC_LATEST.csv
+│   └── USDT_XMR_LATEST.csv
 ├── GetHistoricalData
 │   └── ResearchGetHistoryData.py
 ├── LICENSE
 ├── README.md
 ├── requirements_gpu.txt
 ├── TrainExample
-│   └── ChainerRLExample
-│       ├── ddqn-multiple-input
-│       │   ├── lstm.py
-│       │   ├── main_lstm.py
-│       │   ├── main.py
-│       │   ├── main_TEST_zero_fee_2000inputlen.py
-│       │   ├── main_zero_fee_2000inputlen.py
-│       │   └── README.md
-│       ├── __init__.py
-│       ├── __pycache__
-│       │   └── trade_class.cpython-35.pyc
-│       └── trade_class.py
+│   ├── ChainerRLExample
+│   │   ├── DDQNMultipleInput
+│   │   │   ├── main_dense.py
+│   │   │   ├── main_lstm.py
+│   │   │   ├── README.md
+│   │   │   └── requirements_chainerrl_gpu.txt
+│   │   ├── __init__.py
+│   │   └── __pycache__
+│   │       └── trade_class.cpython-35.pyc
+│   ├── ExampleGeneral
+│   │   └── keras_multiple_input.py
+│   ├── __init__.py
+│   ├── PredictPrice
+│   │   └── SimplePricePrediction
+│   │       ├── main_price_prediction.py
+│   │       └── README.md
+│   ├── __pycache__
+│   │   └── trade_class.cpython-35.pyc
+│   └── trade_class.py
 └── Trash
     └── requirements_cpu_old.txt
 ```
