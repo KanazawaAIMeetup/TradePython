@@ -52,7 +52,7 @@ def standarization(x, axis = None):
     zscore = x2/(3*xstd)
     return zscore.tolist()
 
-test_term=182500#TODO 20000に直す。
+test_term=20000#TODO 20000に直す。
 valid_term = 4000
 X_train = []
 y_train = []
@@ -124,7 +124,7 @@ model.add(LSTM(n_hidden, batch_input_shape=(None, length_of_sequence, in_out_neu
 model.add(Dense(in_out_neurons))
 model.add(Activation("linear"))
 optimizer = Adam(lr=0.001)
-model.compile(loss="mean_squared_error", optimizer=optimizer)
+model.compile(loss="mean_absolute_error", optimizer=optimizer)
 
 # 教師データを正規化して、スケールを合わせる
 y_train_normalized = np.array(y_train) / 10000
@@ -175,7 +175,7 @@ before_pred = y_test[0]
 #pred_array = model.predict(np.array([input_data]))  # 教師が入力に入らないように。
 #pred = pred_array.tolist()[0][0]#出力がnumpy型のa=np.array([[0.5467384]])のようになっている
 '''
-pred_array = model.predict(X_test[:2000])#TODO X_test[:2000]を、X_testに変更する。     
+pred_array = model.predict(X_test)#TODO X_test[:2000]を、X_testに変更する。     
 print(pred_array.shape)
 print(pred_array[0:2])
 
@@ -185,9 +185,9 @@ for idx in range(0, len(pred_array.tolist())-1):#TODO 配列の長さを元に�
     print("idx: "+str(idx))
     pred = pred_array[idx][0]
 
-    if pred - before_pred > 0.5:
+    if pred - before_pred > 0.005:
         action = 0
-    elif pred  - before_pred < -0.5:
+    elif pred  - before_pred < -0.005:
         action = 1
     else:
         action = 2
