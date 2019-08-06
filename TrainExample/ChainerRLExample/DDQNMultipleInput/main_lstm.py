@@ -166,32 +166,32 @@ def reset_info():
     reward = 0
     money = 300
     before_money = money
-    ethereum = 0.01
-    total_money = money + np.float64(y_train[0] * ethereum)
+    cripto = 0.01
+    total_money = money + np.float64(y_train[0] * cripto)
     first_total_money = total_money
     pass_count = 0
     buy_sell_count = 0
 
-    return reward, money, before_money, ethereum, total_money, first_total_money, pass_count, buy_sell_count
+    return reward, money, before_money, cripto, total_money, first_total_money, pass_count, buy_sell_count
 
 
-def action_if(action, buy_sell_count, pass_count, money, ethereum, total_money, current_price):
+def action_if(action, buy_sell_count, pass_count, money, cripto, total_money, current_price):
     if action == 0:
         # print("buy")
         buy_sell_count += 1
-        money, ethereum, total_money = tradecl.buy_simple(money, ethereum, total_money, current_price)
+        money, cripto, total_money = tradecl.buy_simple(money, cripto, total_money, current_price)
     elif action == 1:
         # print("sell")
         buy_sell_count -= 1
-        money, ethereum, total_money = tradecl.sell_simple(money, ethereum, total_money, current_price)
+        money, cripto, total_money = tradecl.sell_simple(money, cripto, total_money, current_price)
     elif action == 2:
         # print("PASS")
-        money, ethereum, total_money = tradecl.pass_simple(money, ethereum, total_money, current_price)
+        money, cripto, total_money = tradecl.pass_simple(money, cripto, total_money, current_price)
         pass_count += 1
 
-    total_money = money + ethereum * current_price
+    total_money = money + cripto * current_price
 
-    return buy_sell_count, pass_count, money, ethereum, total_money
+    return buy_sell_count, pass_count, money, cripto, total_money
 
 
 def print_info_interval(first_total_money, total_money, pass_count, buy_sell_count):
@@ -221,9 +221,9 @@ pass_count:　何回売買をせずに見送ったか。passをした合計回�
 pass_renzoku_count: 取引せずに見送るPassを何回連続で行なったか。学習の状況や取引を可視化するために作成した。
 '''
 
-reward, money, before_money, ethereum, total_money, first_total_money, pass_count, buy_sell_count = reset_info()
+reward, money, before_money, cripto, total_money, first_total_money, pass_count, buy_sell_count = reset_info()
 for episode in range(0, 2):
-    reward, money, before_money, ethereum, total_money, first_total_money, pass_count, buy_sell_count = reset_info()
+    reward, money, before_money, cripto, total_money, first_total_money, pass_count, buy_sell_count = reset_info()
     for idx in range(0, len(y_train)):  # TODO
         if idx % 1000 == 0:
             print("=============================================")
@@ -240,8 +240,8 @@ for episode in range(0, 2):
         # print(agent.get_statistics())
         tradecl.update_trading_view(current_price, action)
 
-        buy_sell_count, pass_count, money, ethereum, total_money = action_if(action, buy_sell_count, pass_count, money,
-                                                                             ethereum, total_money, current_price)
+        buy_sell_count, pass_count, money, cripto, total_money = action_if(action, buy_sell_count, pass_count, money,
+                                                                             cripto, total_money, current_price)
         reward = 0
         reward += 0.01 * (total_money - before_money)  # max(current_price-bought_price,0)##
         before_money = total_money
@@ -288,7 +288,7 @@ agent.save('chainerRLAgentFinal-zerofee-lstm-1000inputlen')
 
 # print(traceback.format_exc())
 
-reward, money, before_money, ethereum, total_money, first_total_money, pass_count, buy_sell_count = reset_info()
+reward, money, before_money, cripto, total_money, first_total_money, pass_count, buy_sell_count = reset_info()
 tradecl.reset_trading_view()
 for idx in range(0, len(y_test)):
     current_price = y_test[idx]  # 重要
@@ -297,8 +297,8 @@ for idx in range(0, len(y_test)):
     #state_data = state_data.reshape(state_data.shape[0], 1)
     action = agent.act(state_data)  # 教師が入力に入らないように。
     tradecl.update_trading_view(current_price, action)
-    buy_sell_count, pass_count, money, ethereum, total_money = \
-        action_if(action, buy_sell_count, pass_count, money, ethereum, total_money, current_price)
+    buy_sell_count, pass_count, money, cripto, total_money = \
+        action_if(action, buy_sell_count, pass_count, money, cripto, total_money, current_price)
     # before_money = total_money
 
 print("pass_count：" + str(pass_count))
