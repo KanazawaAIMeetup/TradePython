@@ -8,6 +8,7 @@ python main.py
 注意：評価する場合は、正解データのリークが起きないようにする。Train,Validation,Testの分割方法に気をつける
 このプログラムは、リークを厳密に回避していません！
 実行を早くするため、test_term=120000 epochs=1 となっていますが、実際に評価する場合はtest_term=20000、 epocsも20などに直して下さい。
+詳しくは、このソースコード内を「TODO」で検索して下さい。
 '''
 import sys, os
 sys.path.append("..")
@@ -51,7 +52,7 @@ def standarization(x, axis = None):
     zscore = x2/(3*xstd)
     return zscore.tolist()
 
-test_term=182000#TODO 20000に直す。
+test_term=182500#TODO 20000に直す。
 valid_term = 4000
 X_train = []
 y_train = []
@@ -80,7 +81,6 @@ def env_execute(action,current_price,next_price,cripto_amount,usdt_amount):
 
 #取引を何もしなくても価格の変化に応じて資産が増減するようにする
 def reset_info():
-    reward=0
     money = 300
     before_money = money
     cripto = 0.01
@@ -90,7 +90,7 @@ def reset_info():
     buy_sell_count=0
     pass_renzoku_count=0
 
-    return reward,money,before_money,cripto,total_money,first_total_money,pass_count,buy_sell_count,pass_renzoku_count
+    return money,before_money,cripto,total_money,first_total_money,pass_count,buy_sell_count,pass_renzoku_count
 
 def action_if(action,buy_sell_count,pass_count,money,cripto,total_money,current_price):
     #buy_simple, sell_simple, pass_simple関数は一階層上のtrade_class.py参照。
@@ -165,16 +165,26 @@ pass_renzoku_count: 取引せずに見送るPassを何回連続で行なった�
 
 #TODO モデルの保存
 
-reward, money, before_money, cripto, total_money, first_total_money, pass_count, buy_sell_count, pass_renzoku_count = reset_info()
+money, before_money, cripto, total_money, first_total_money, pass_count, buy_sell_count, pass_renzoku_count = reset_info()
 tradecl.reset_trading_view()#グラフの描画をリセットする
 before_price = y_test[0]
 before_pred = y_test[0]
-for idx in range(0, len(y_test)):
+
+'''
+一つの入力データについてだけ予測したい場合
+#pred_array = model.predict(np.array([input_data]))  # 教師が入力に入らないように。
+#pred = pred_array.tolist()[0][0]#出力がnumpy型のa=np.array([[0.5467384]])のようになっている
+'''
+pred_array = model.predict(X_test[:2000])#TODO X_test[:2000]を、X_testに変更する。     
+print(pred_array.shape)
+print(pred_array[0:2])
+
+money, before_money, cripto, total_money, first_total_money, pass_count, buy_sell_count,pass_renzoku_count = reset_info()
+for idx in range(0, len(pred_array.tolist())-1):#TODO 配列の長さを元に戻す。
     current_price = y_test[idx]#添字間違えないように
-    input_data = np.array(X_test[idx], dtype='f')
-    pred_array = model.predict(np.array([input_data]))  # 教師が入力に入らないように。
-    print("prediction: "+str(pred_array))
-    pred = pred_array.tolist()[0]
+    print("idx: "+str(idx))
+    pred = pred_array[idx][0]
+
     if pred - before_pred > 0.5:
         action = 0
     elif pred  - before_pred < -0.5:
@@ -189,29 +199,17 @@ for idx in range(0, len(y_test)):
     before_price = current_price
     before_pred = pred
 
-pass_count=0
-
 print("====================TEST======================")
 print("START MONEY" + str(first_total_money))
 print("FINAL MONEY:" + str(total_money))
 print("pass_count：" + str(pass_count))
 print("buy_sell_count(at the end of TEST):" + str(buy_sell_count))
-print("buy_sell_fee:" + str(tradecl.buy_sell_fee))
+
 
 #matploblibでトレードの結果をグラフで可視化
 try:
     tradecl.draw_trading_view()
 except:
-    pass
+    print(traceback.format_exc()) 
+    print("tradecl.draw_trading_view FAILED!!")
 
-'''
-[np.array([[-0.42916594],
-       [-0.40072593],
-       [-0.41020593],
-       [-0.41189962],
-       [-0.31950475],
-       [-0.28452934],
-       [-0.32594774],
-       [-0.39598592],
-       [-0.3989853 ]])]
-'''
