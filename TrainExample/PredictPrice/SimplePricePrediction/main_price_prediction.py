@@ -7,6 +7,7 @@ Usage: ddqn-multiple-inputディレクトリから実行する。
 python main.py
 注意：評価する場合は、正解データのリークが起きないようにする。Train,Validation,Testの分割方法に気をつける
 このプログラムは、リークを厳密に回避していません！
+実行を早くするため、test_term=120000 epochs=1 となっていますが、実際に評価する場合はtest_term=20000、 epocsも20などに直して下さい。
 '''
 import sys, os
 sys.path.append("..")
@@ -50,7 +51,7 @@ def standarization(x, axis = None):
     zscore = x2/(3*xstd)
     return zscore.tolist()
 
-test_term=120000#TODO 20000に直す。
+test_term=182000#TODO 20000に直す。
 valid_term = 4000
 X_train = []
 y_train = []
@@ -145,10 +146,10 @@ print(X_train[0:3])
 
 print("Training Starts")
 model.fit(X_train, y_train_normalized,
-          batch_size=300,
+          batch_size=64,
           validation_data=(X_valid, y_valid),
           verbose=1,
-          epochs=20)
+          epochs=1)
 
 '''
 reward: 強化学習のトレーニングに必要な報酬
@@ -171,8 +172,8 @@ before_pred = y_test[0]
 for idx in range(0, len(y_test)):
     current_price = y_test[idx]#添字間違えないように
     input_data = np.array(X_test[idx], dtype='f')
-    pred_array = model.predict(input_data)  # 教師が入力に入らないように。
-    print("prediction: "+str(pred))
+    pred_array = model.predict(np.array([input_data]))  # 教師が入力に入らないように。
+    print("prediction: "+str(pred_array))
     pred = pred_array.tolist()[0]
     if pred - before_pred > 0.5:
         action = 0
