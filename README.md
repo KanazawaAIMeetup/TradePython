@@ -66,6 +66,15 @@ pip install -r requirements_gpu.txt
 - GetHistoricalData/ ヒストリカルデータをpoloniexから取得するためのスクリプトがあります。
 - TrainExample/ tomouenoが学習に使用したサンプルのソースコードがあります。
 - TrainExample/trade_class.py 簡易的な取引のエミュレータがあります。手数料を加味して、単純に資産の増減を表示する程度ですが、αやβなどの指数を出す機能も今後は実装したいです。
+
+# 機能
+trade_class.py 
+### draw_trading_viw()
+![](https://i.imgur.com/FKaqrL6.png)
+取引の結果を可視化する。緑がBuyで赤がSell
+
+
+
 ## 引用文献・参考文献
 - 「Poloniex - Crypto Asset Exchange」(https://poloniex.com/)
 - 「ChainerRL Visualizer」(https://github.com/chainer/chainerrl-visualizer)

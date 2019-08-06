@@ -16,7 +16,7 @@ import chainer
 from chainerrl.agents import a3c
 import chainer.links as L
 import chainer.functions as F
-import os, sys
+import os, sys, copy, traceback, random
 print(os.getcwd())
 sys.path.append(os.getcwd())
 sys.path.append(os.pardir)
@@ -29,8 +29,6 @@ import chainerrl
 from chainerrl_visualizer import launch_visualizer
 from chainer import Variable, optimizers, Chain, cuda
 import numpy as np
-import random
-import sys,os,copy,traceback
 from trade_class import TradeClass
 cp = cuda.cupy
 from sklearn import preprocessing
@@ -192,6 +190,19 @@ def action_if(action,buy_sell_count,pass_count,money,ethereum,total_money,curren
 
     return buy_sell_count, pass_count, money, ethereum, total_money
 
+def print_info_interval(first_total_money, total_money, pass_count, buy_sell_count):
+    print("Initial MONEY:"+str(first_total_money))
+    print("Current Total MONEY:" + str(total_money))
+    print("ある回数の予測において、Passは"+str(pass_count)+"回")
+    print("終わった後のbuy_sell_count:" + str(buy_sell_count) + ("回買いの取引が多い" if buy_sell_count > 0 else "回売りの取引が多い"))
+
+    pass_count = 0
+    try:
+        tradecl.draw_trading_view()
+    except:
+        pass
+    agent.save('chainerRLAgent-Dense')
+
 '''
 reward: 強化学習のトレーニングに必要な報酬
 money: 現在の総資産(スタート時は300ドルなど任意の値で初期化)
@@ -208,7 +219,8 @@ for episode in range(0,5):
     reward, money, before_money, ethereum, total_money, first_total_money, pass_count, buy_sell_count, pass_renzoku_count = reset_info()
     for idx in range(0, len(y_train)):#TODO
         if idx % 1000 == 0:
-            print("EPISODE:"+str(episode)+"LOOP IDX:"+str(idx))
+            print("===================================")
+            print("EPISODE:"+str(episode)+"| LOOP IDX:"+str(idx))
             print("BEGGINING MONEY:" + str(first_total_money))
             print("Current Total MONEY:" + str(total_money))
         current_price = y_train[idx]
@@ -225,18 +237,9 @@ for episode in range(0,5):
         reward += 0.01 * (total_money - before_money)  # max(current_price-bought_price,0)##
         before_money = total_money
 
-        if False:#idx % 5000 == 500:#学習状況の可視化のためのツール　普段はFalseにする。
-            print("Initial MONEY:"+str(first_total_money))
-            print("Current Total MONEY:" + str(total_money))
-            print("ある回数の予測において、Passは"+str(pass_count)+"回")
-            print("ある回数の予測において、終わった後のbuy_sell_count:" + str(buy_sell_count) + "回"+ "(買いの回数が多い)" if buy_sell_count > 0 else "(売りの回数が多い)")
-            pass_count=0
-            try:
-                #matplotlib(GUI)でどのタイミングで売買を行なっているか可視化。
-                tradecl.draw_trading_view()
-            except:
-                pass
-            agent.save('chainerRLAgent-Dense')
+        if False: #idx % 5000 == 500:#学習状況の可視化のためのツール　普段はFalseにする。
+            print_info_interval(first_total_money, total_money, pass_count, buy_sell_count)
+
     #インデントこれであってる
     buy_sell_num_flag = [1.0, 0.0, abs(buy_sell_count)] if buy_sell_count >= 1 else [0.0, 1.0, abs(buy_sell_count)]
     agent.stop_episode_and_train(X_train[-1]+buy_sell_num_flag, reward, True)#エピソード（価格データの最初から最後までを辿ること）を一旦停止
@@ -244,8 +247,7 @@ for episode in range(0,5):
 
 print("Training END")
 print("Passは" + str(pass_count) + "回")
-print("ある回数の予測において、終わった後のbuy_sell_count" + str(buy_sell_count) + "回"+ "　買いの回数が多い" if buy_sell_count > 0 else "　売りの回数が多い")
-
+print("終わった後のbuy_sell_count:" + str(buy_sell_count) + ("回買いの取引が多い" if buy_sell_count > 0 else "回売りの取引が多い"))
 print("Initial MONEY" + str(first_total_money))
 print("FINAL MONEY:" + str(total_money))
 # Save an agent to the 'agent' directory
@@ -290,11 +292,11 @@ print("====================TEST======================")
 print("START MONEY" + str(first_total_money))
 print("FINAL MONEY:" + str(total_money))
 print("pass_count：" + str(pass_count))
-print("buy_sell_count(at the end of TEST):" + str(buy_sell_count))
-print("buy_sell_fee:" + str(buy_sell_fee))
+print("終わった後のbuy_sell_count:" + str(buy_sell_count) + ("回買いの取引が多い" if buy_sell_count > 0 else "回売りの取引が多い"))
+print("buy_sell_fee:" + str(tradecl.buy_sell_fee))
 
 #matploblibでトレードの結果をグラフで可視化
 try:
     tradecl.draw_trading_view()
 except:
-    pass
+    print(traceback.format_exc()) 
