@@ -17,6 +17,8 @@ Python3.5.6を使用して、ライブラリをインストールする。
 pip install -r requirements.txt
 ```
 
+Requirement already satisfied と表示されるが、import できない場合はこの記事(https://pod.hatenablog.com/entry/2019/04/10/130101)が参考になるかもしれません。
+
 （はじめてPythonをさわる方）
 AnacondaのPythonをインストール。3系の最新版をインストール。その後、Anaconda上での仮想環境を作成し、その環境にライブラリをインストールする。なお、仮想環境とは言うもののVM(Virtual Machine)とは全く関係ない。Anacondaは基本的に```pip install```と```conda install```を同じ環境内で併用してはいけないのが基本。ただし、matplotlibやopencvなど画面で表示する必要のあるライブラリは私の場合condaでインストールする場合が多い。(MacやWindowsの場合はpipでインストールしてもうまく動かない場合がある。)
 
