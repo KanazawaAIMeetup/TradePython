@@ -69,7 +69,7 @@ class TradeClass(object):
 
     def buy_simple(self,money, ethereum, total_money, current_price):
         first_money, first_ethereum, first_total_money = money, ethereum, total_money
-        spend = money * 0.1#資産全体の１割を
+        spend = money * 0.1#いくら分取引に使うか
         money -= spend * (1+self.transaction_fee)
         if money <= 0.0:
             return first_money,first_ethereum,first_total_money
@@ -81,7 +81,7 @@ class TradeClass(object):
 
     def sell_simple(self,money, ethereum, total_money, current_price):
             first_money, first_ethereum, first_total_money = money, ethereum, total_money
-            spend = ethereum * 0.1
+            spend = ethereum * 0.1 #いくら分取引に使うか
             ethereum -= spend * (1+self.transaction_fee)
             if ethereum <= 0.0:
                 return first_money,first_ethereum,first_total_money
@@ -123,6 +123,33 @@ class TradeClass(object):
     def PassUsingPrediction(self, pred, money, ethereum, total_money, current_price):
         first_money, first_ethereum, first_total_money = money, ethereum, total_money
         return first_money,first_ethereum,first_total_money
+
+    def buy_using_ratio(self,money, ethereum, total_money, current_price, ratio):
+        first_money, first_ethereum, first_total_money = money, ethereum, total_money
+        spend = money * ratio#いくら分取引に使うか
+        money -= spend * (1+self.transaction_fee)
+        if money <= 0.0:
+            return first_money,first_ethereum,first_total_money
+
+        ethereum += float(spend / current_price)
+        total_money = money + ethereum * current_price
+
+        return money, ethereum, total_money
+
+    def sell_using_ratio(self,money, ethereum, total_money, current_price, ratio):
+            first_money, first_ethereum, first_total_money = money, ethereum, total_money
+            spend = ethereum * ratio #いくら分取引に使うか
+            ethereum -= spend * (1+self.transaction_fee)
+            if ethereum <= 0.0:
+                return first_money,first_ethereum,first_total_money
+
+            money += float(spend * current_price)
+            total_money = money + float(ethereum * current_price)
+
+            return money, ethereum, total_money
+    def pass_using_ratio(self,money,ethereum,total_money,current_price, ratio):
+        total_money = money + float(ethereum * current_price)
+        return money,ethereum,total_money
 
     # 配列の長さに気をつける。
     #実験結果：何割の資産を取引に使うかについて、0.01%だけだと＋30ドル 0.1%*pred(予測値によって取引量を変える)で+200ドル

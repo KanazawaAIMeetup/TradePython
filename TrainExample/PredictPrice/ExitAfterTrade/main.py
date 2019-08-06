@@ -4,8 +4,7 @@ MITライセンス　このプログラムについては、改変・再配布�
 著作者： Tomohiro Ueno (kanazawaaimeetup@gmail.com)
 
 Usage: ddqn-multiple-inputディレクトリから実行する。
-python main_price_prediction.py
-
+python main.py
 注意：評価する場合は、正解データのリークが起きないようにする。Train,Validation,Testの分割方法に気をつける
 このプログラムは、リークを厳密に回避していません！
 実行を早くするため、test_term=120000 epochs=1 となっていますが、実際に評価する場合はtest_term=20000、 epocsも20などに直して下さい。
@@ -97,14 +96,14 @@ def action_if(action,buy_sell_count,pass_count,money,cripto,total_money,current_
     if action == 0:
         #Buy
         buy_sell_count += 1
-        money, cripto, total_money = tradecl.buy_simple(money, cripto, total_money, current_price,ratio)
+        money, cripto, total_money = tradecl.buy_using_ratio(money, cripto, total_money, current_price, ratio)
     elif action == 1:
         #Sell
         buy_sell_count -= 1
-        money, cripto, total_money = tradecl.sell_simple(money, cripto, total_money, current_price,ratio)
+        money, cripto, total_money = tradecl.sell_using_ratio(money, cripto, total_money, current_price, ratio)
     elif action == 2:
         #PASS
-        money, cripto, total_money = tradecl.pass_simple(money, cripto, total_money, current_price,ratio)
+        money, cripto, total_money = tradecl.pass_using_ratio(money, cripto, total_money, current_price, ratio)
         pass_count += 1
 
     total_money=money+cripto*current_price
@@ -164,8 +163,6 @@ pass_renzoku_count: 取引せずに見送るPassを何回連続で行なった�
 '''
 
 #TODO モデルの保存
-
-money, before_money, cripto, total_money, first_total_money, pass_count, buy_sell_count, pass_renzoku_count, before_action = reset_info()
 tradecl.reset_trading_view()#グラフの描画をリセットする
 before_price = y_test[0]
 before_pred = y_test[0]
@@ -185,11 +182,21 @@ for idx in range(0, len(pred_array.tolist())-1):#TODO 配列の長さを元に�
 
     pred = pred_array[idx][0]
 
-    if pred - before_pred > 0.00005:
+    pred_diff = pred - before_pred
+    if pred_diff > 0.00005 and before_action == 2:
+        #入札する
         action = 0
-    elif pred  - before_pred < -0.00005:
+    elif pred_diff < -0.00005 and before_action == 2:
+        #入札する
+        action = 1
+    elif pred_diff > 0.00005 and before_action == 1:
+        #決済する
+        action = 0
+    elif pred_diff < 0.00005 and before_action == 0:
+        #決済する
         action = 1
     else:
+        #何もしない
         action = 2
 
     tradecl.update_trading_view(current_price, action)
