@@ -20,21 +20,17 @@ class TradeClass(object):
         self.price_history = []
         self.transaction_fee = 0.0001 #取引手数料。この場合0.01%としたが、自由に変えて良い。
 
-    def read_cripto_watch_json(self):
-        f = open('../DATA/Min-2017-6-1.json', 'r')
-        jsonData = json.load(f)
-        return jsonData["60"]
-
     def ReadPoloniexCSV(self):
         import csv
         history_data=[]
-        with open('../../../DATA/USDT_BTC_0.csv', 'r') as f:
+        with open('../../../DATA/USDT_BTC_LATEST.csv', 'r') as f:
             reader=csv.reader(f,delimiter=',')
             next(reader)
             for row in reader:
                 history_data.append(float(row[1]))
                 #print(float(row[1]))
             return history_data
+
     def ReadBitflyerJson(self):
         import csv
         history_data=[]

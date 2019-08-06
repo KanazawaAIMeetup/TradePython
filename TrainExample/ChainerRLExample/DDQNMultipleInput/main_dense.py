@@ -162,33 +162,33 @@ def reset_info():
     reward=0
     money = 300
     before_money = money
-    ethereum = 0.01
-    total_money = money + np.float64(y_train[0] * ethereum)
+    cripto = 0.01
+    total_money = money + np.float64(y_train[0] * cripto)
     first_total_money = total_money
     pass_count=0
     buy_sell_count=0
     pass_renzoku_count=0
 
-    return reward,money,before_money,ethereum,total_money,first_total_money,pass_count,buy_sell_count,pass_renzoku_count
+    return reward,money,before_money,cripto,total_money,first_total_money,pass_count,buy_sell_count,pass_renzoku_count
 
-def action_if(action,buy_sell_count,pass_count,money,ethereum,total_money,current_price):
+def action_if(action,buy_sell_count,pass_count,money,cripto,total_money,current_price):
     #buy_simple, sell_simple, pass_simple関数は一階層上のtrade_class.py参照。
     if action == 0:
         #Buy
         buy_sell_count += 1
-        money, ethereum, total_money = tradecl.buy_simple(money, ethereum, total_money, current_price)
+        money, cripto, total_money = tradecl.buy_simple(money, cripto, total_money, current_price)
     elif action == 1:
         #Sell
         buy_sell_count -= 1
-        money, ethereum, total_money = tradecl.sell_simple(money, ethereum, total_money, current_price)
+        money, cripto, total_money = tradecl.sell_simple(money, cripto, total_money, current_price)
     elif action == 2:
         #PASS
-        money, ethereum, total_money = tradecl.pass_simple(money, ethereum, total_money, current_price)
+        money, cripto, total_money = tradecl.pass_simple(money, cripto, total_money, current_price)
         pass_count += 1
 
-    total_money=money+ethereum*current_price
+    total_money=money+cripto*current_price
 
-    return buy_sell_count, pass_count, money, ethereum, total_money
+    return buy_sell_count, pass_count, money, cripto, total_money
 
 def print_info_interval(first_total_money, total_money, pass_count, buy_sell_count):
     print("Initial MONEY:"+str(first_total_money))
@@ -214,9 +214,9 @@ pass_count:　何回売買をせずに見送ったか。passをした合計回�
 #buy_sell_count: 今までの取引の中でBuyとSellにどれだけ偏りがあるかを表す数。Buyされる度に+1,Sellされる度に-1される。つまり、正数の場合はBuyばかりされていて、負数の場合はSellばかりされている。
 pass_renzoku_count: 取引せずに見送るPassを何回連続で行なったか。学習の状況や取引を可視化するために作成した。
 '''
-reward, money, before_money, ethereum, total_money, first_total_money, pass_count, buy_sell_count, pass_renzoku_count = reset_info()
+reward, money, before_money, cripto, total_money, first_total_money, pass_count, buy_sell_count, pass_renzoku_count = reset_info()
 for episode in range(0,5):
-    reward, money, before_money, ethereum, total_money, first_total_money, pass_count, buy_sell_count, pass_renzoku_count = reset_info()
+    reward, money, before_money, cripto, total_money, first_total_money, pass_count, buy_sell_count, pass_renzoku_count = reset_info()
     for idx in range(0, len(y_train)):#TODO
         if idx % 1000 == 0:
             print("===================================")
@@ -231,8 +231,8 @@ for episode in range(0,5):
         tradecl.update_trading_view(current_price, action)
         reward=0
 
-        buy_sell_count, pass_count, money, ethereum, total_money = \
-            action_if(action,buy_sell_count,pass_count,money,ethereum,total_money,current_price)
+        buy_sell_count, pass_count, money, cripto, total_money = \
+            action_if(action,buy_sell_count,pass_count,money,cripto,total_money,current_price)
 
         reward += 0.01 * (total_money - before_money)  # max(current_price-bought_price,0)##
         before_money = total_money
@@ -245,7 +245,7 @@ for episode in range(0,5):
     agent.stop_episode_and_train(X_train[-1]+buy_sell_num_flag, reward, True)#エピソード（価格データの最初から最後までを辿ること）を一旦停止
     #強化学習の初期では少ない手数料で、学習後半には手数料を少しずつ増やしていく
 
-print("Training END")
+print("========Training END============")
 print("Passは" + str(pass_count) + "回")
 print("終わった後のbuy_sell_count:" + str(buy_sell_count) + ("回買いの取引が多い" if buy_sell_count > 0 else "回売りの取引が多い"))
 print("Initial MONEY" + str(first_total_money))
@@ -273,7 +273,7 @@ launch_visualizer(
 
 #print(traceback.format_exc())
 
-reward, money, before_money, ethereum, total_money, first_total_money, pass_count, buy_sell_count, pass_renzoku_count = reset_info()
+reward, money, before_money, cripto, total_money, first_total_money, pass_count, buy_sell_count, pass_renzoku_count = reset_info()
 tradecl.reset_trading_view()#グラフの描画をリセットする
 for idx in range(0, len(y_test)):
     current_price = y_test[idx]#添字間違えないように
@@ -281,9 +281,9 @@ for idx in range(0, len(y_test)):
     state_data = np.array(X_test[idx] + buy_sell_num_flag, dtype='f')
     action = agent.act(state_data)  # 教師が入力に入らないように。
     tradecl.update_trading_view(current_price, action)
-    buy_sell_count, pass_count, money, ethereum, total_money = \
-            action_if(action,buy_sell_count,pass_count,money,ethereum,total_money,current_price)
-    #buy_sell_count, pass_count, money, ethereum, total_money
+    buy_sell_count, pass_count, money, cripto, total_money = \
+            action_if(action,buy_sell_count,pass_count,money,cripto,total_money,current_price)
+    #buy_sell_count, pass_count, money, cripto, total_money
     before_money = total_money
 
 pass_count=0
