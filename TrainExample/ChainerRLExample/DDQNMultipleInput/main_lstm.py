@@ -9,6 +9,8 @@ python main_lstm.py
 import sys, os
 sys.path.append("..")
 sys.path.append("../..")
+sys.path.append(os.getcwd())
+sys.path.append(os.pardir)
 
 import chainer
 # import chainer.functions as F
@@ -16,20 +18,16 @@ import chainer
 from chainerrl.agents import a3c
 import chainer.links as L
 import chainer.functions as F
-import os, sys
+import chainerrl
+from chainerrl_visualizer import launch_visualizer
+from chainer import Variable, optimizers, Chain, cuda
+from chainerrl.recurrent import RecurrentChainMixin
 
-print(os.getcwd())
-sys.path.append(os.getcwd())
-sys.path.append(os.pardir)
 # from chainerrl.action_value import DiscreteActionValue
 # from chainerrl.action_value import QuadraticActionValue
 # from chainerrl.optimizers import rmsprop_async
 # from chainerrl import links
 # from chainerrl import policies
-import chainerrl
-from chainerrl_visualizer import launch_visualizer
-from chainer import Variable, optimizers, Chain, cuda
-from chainerrl.recurrent import RecurrentChainMixin
 import numpy as np
 import random
 import sys, os, copy, traceback
@@ -156,7 +154,6 @@ agent = chainerrl.agents.DoubleDQN(
     model, opt, replay_buffer, gamma, explorer,
     replay_start_size=500, update_interval=1,
     target_update_interval=100)
-buy_sell_fee = 0.0  # 0.0001で0.01%の手数料 #1%は0.01を設定する。
 
 # chainerのモデルをロードする関数　初めて学習する場合はコメントアウトしたままで使用する。
 # try:
@@ -198,16 +195,18 @@ def action_if(action, buy_sell_count, pass_count, money, ethereum, total_money, 
 
 
 def print_info_interval(first_total_money, total_money, pass_count, buy_sell_count):
+    print("=====Draw Trading View by print_info_interval=========")
     print("Initial MONEY:"+str(first_total_money))
     print("Current Total MONEY:" + str(total_money))
     print("ある回数の予測において、Passは"+str(pass_count)+"回")
-    print("ある回数の予測において、終わった後のbuy_sell_count:" + str(buy_sell_count) + "回"+ "(買いの回数が多い)" if buy_sell_count > 0 else "(売りの回数が多い)")
+    print("ある回数の予測において、終わった後のbuy_sell_count:" + str(buy_sell_count) + ("回買いの回数が多い" if buy_sell_count > 0 else "回売りの回数が多い"))
 
     pass_count = 0
     try:
         tradecl.draw_trading_view()
     except:
-        pass
+        print(traceback.format_exc()) 
+        print("tradecl.draw_trading_view FAILED!!")
     agent.save('chainerRLAgent-LSTM')
 
 '''
@@ -223,14 +222,15 @@ pass_renzoku_count: 取引せずに見送るPassを何回連続で行なった�
 '''
 
 reward, money, before_money, ethereum, total_money, first_total_money, pass_count, buy_sell_count = reset_info()
-for episode in range(0, 5):
+for episode in range(0, 2):
     reward, money, before_money, ethereum, total_money, first_total_money, pass_count, buy_sell_count = reset_info()
     for idx in range(0, len(y_train)):  # TODO
         if idx % 1000 == 0:
-            print("EPISODE:" + str(episode) + "LOOP IDX:" + str(idx))
+            print("=============================================")
+            print("EPISODE:" + str(episode) + "|  LOOP IDX:" + str(idx))
             print("BEGGINING MONEY:" + str(first_total_money))
             print("Current Total MONEY:" + str(total_money))
-            print("ある回数の予測において、終わった後のbuy_sell_count:" + str(buy_sell_count) + "回"+ "(買いの回数が多い)" if buy_sell_count > 0 else "(売りの回数が多い)")
+            print("ある回数の予測において、終わった後のbuy_sell_count:" + str(buy_sell_count) + ("回買いの回数が多い" if buy_sell_count > 0 else "回売りの回数が多い"))
 
         current_price = y_train[idx]
         buy_sell_num_flag = [1.0, 0.0, abs(buy_sell_count)] if buy_sell_count >= 1 else [0.0, 1.0, abs(buy_sell_count)]
@@ -245,22 +245,23 @@ for episode in range(0, 5):
         reward = 0
         reward += 0.01 * (total_money - before_money)  # max(current_price-bought_price,0)##
         before_money = total_money
-        if False:  # idx % 5000 == 500: #学習状況の可視化のためのツール　普段はFalseにする。
+        if False:#idx % 5000 == 500: #学習状況の可視化のためのツール　普段はFalseにする。
             print_info_interval(first_total_money, total_money, pass_count, buy_sell_count)
+            
 
     # インデントこれであってるから変更しないこと。
     buy_sell_num_flag = [1.0, 0.0, abs(buy_sell_count)] if buy_sell_count >= 1 else [0.0, 1.0, abs(buy_sell_count)]
     state_data=np.array(X_train[-1]+buy_sell_num_flag, dtype='f')
     #state_data = state_data.reshape(state_data.shape[0], 1)#This line is necessary only for LSTM
     agent.stop_episode_and_train(state_data, reward, True)
-    # buy_sell_fee=buy_sell_fee*10 #TODO 強化学習の初期では少ない手数料で、少しずつ増やしていく
+    # tradecl.buy_sell_fee=tradecl.buy_sell_fee*10 #TODO 強化学習の初期では少ない手数料で、少しずつ増やしていく
 
 print("=====Training END============================")
 print("START MONEY" + str(first_total_money))
 print("FINAL MONEY:" + str(total_money))
 print("pass(at the end of training):" + str(pass_count))
-print("buy_sell_count" + str(buy_sell_count))
-print("buy_sell_fee:" + str(buy_sell_fee))
+print("ある回数の予測において、終わった後のbuy_sell_count" + str(buy_sell_count) + "回"+ "分買いの回数が多い" if buy_sell_count > 0 else "分売りの回数が多い")
+print("buy_sell_fee:" + str(tradecl.buy_sell_fee))
 
 # Save an agent to the 'agent' directory
 agent.save('chainerRLAgentFinal-zerofee-lstm-1000inputlen')
@@ -302,7 +303,7 @@ for idx in range(0, len(y_test)):
 
 print("pass_count：" + str(pass_count))
 print("buy_sell_count(at the end of TEST):" + str(buy_sell_count))
-print("buy_sell_fee:" + str(buy_sell_fee))
+print("buy_sell_fee:" + str(tradecl.buy_sell_fee))
 
 print("====================TEST======================")
 print("Initial MONEY:"+str(first_total_money))
