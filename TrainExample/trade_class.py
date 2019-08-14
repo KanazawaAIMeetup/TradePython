@@ -184,7 +184,7 @@ class TradeClass(object):
         self.price_history=[]
         self.trade_history=[]
 
-    def draw_trading_view(self):
+    def draw_trading_view(self,filename):
         data, date = np.array(self.price_history), np.array([idx for idx in range(0, len(self.price_history))])
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -201,8 +201,11 @@ class TradeClass(object):
         ax.set_xlabel("Day")
         ax.set_ylabel("Price[$]")
         plt.grid(fig)
-        print("===Show Figure===")
-        plt.show(fig)
+        #print("===Show Figure===")
+        #plt.show(fig)
+        
+        print("Save Figure :"+ filename)
+        plt.savefig(filename)
         
         self.price_history=[]
         self.trade_history=[]

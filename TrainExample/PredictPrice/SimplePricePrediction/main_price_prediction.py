@@ -209,7 +209,7 @@ print("buy_sell_count(at the end of TEST):" + str(buy_sell_count))
 
 #matploblibでトレードの結果をグラフで可視化
 try:
-    tradecl.draw_trading_view()
+    tradecl.draw_trading_view("main_price_prediction.png")
 except:
     print(traceback.format_exc()) 
     print("tradecl.draw_trading_view FAILED!!")
