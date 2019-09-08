@@ -164,11 +164,11 @@ class TradeClass(object):
             current_price = price[i]
             prediction = model.predict(X_test[i])
             pred = prediction[0]
-            if pred > 0:
+            if pred > 0.0001: #1.0で100% 一つ前の予測と比較して1%増えたら、と書きたい場合は  > 0.01
                 print("buy")
                 money, ethereum, total_money = self.BuyAndCalcAmoutUsingPrediction(pred,money, ethereum, total_money, current_price)
                 print("money"+str(money))
-            elif pred <= 0:
+            elif pred <= 0.0001:# 一つ前の予測と比較して1%減ったら、と書きたい場合は  < 0.01
                 print("sell")
                 money, ethereum, total_money = self.SellAndCalcAmoutUsingPrediction(pred,money, ethereum, total_money, current_price)
                 print("money"+str(money))
