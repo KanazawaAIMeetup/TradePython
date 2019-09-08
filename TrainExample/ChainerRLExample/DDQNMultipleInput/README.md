@@ -2,6 +2,19 @@
 - main.py (gpuで計算) 時系列の価格データを単純な全結合層を用いた強化学習で学習を行なったバージョン
 - main_lstm.py (cpuで計算) 時系列の価格データをLSTMを用いた強化学習で学習を行なったバージョン
 
+# main_lstm.pyの説明
+
+buy_sell_num_flagは、買った回数と売った回数を引き算した差分の値が入っています。
+https://github.com/KanazawaAIMeetup/TradePython/blob/master/TrainExample/ChainerRLExample/DDQNMultipleInput/main_lstm.py#L236
+ここの行では、
+[1.0, 0.0, abs(buy_sell_count)]
+のような配列が代入されますが、配列の0番目、1番目には買いが多いか、売りが多いかのフラッグが、2番目には正の値で、回数が格納されています。
+このような配列を特徴量に加えた理由は、取引をAIにさせる過程で、売りばかりしたり、もしくは買いばかりして取引の効率が悪くなるのを強化学習で防ごうという意図があります。（建て玉が増えすぎてしまうのを防ぐイメージ）
+main_lstm.pyに関して申しますと、Chainerの仕様でchainer-rlを使おうとすると、どうしてもハードコーディングしなければならず（私の調べた範囲では）、特徴量を
+state_data = np.array(X_train[idx] + buy_sell_num_flag, dtype='f')
+として一つの変数にまとめた後に、再びLSTMの内部で別々に入力できるよう、取り出しています。
+ネットワークは、時系列データを処理するLSTMの出力層の値と、フラッグの値を最後の全結合層でマージしています。Fuse-Netと似ている構造です。
+
 
 # ソースコード作成のメモ
 
