@@ -37,7 +37,22 @@ ss = preprocessing.StandardScaler()
 print(os.path.basename(__file__))
 
 tradecl=TradeClass()
+
+
+def ReadPoloniexCSV():
+    import csv
+    history_data = []
+    with open('../DATA/USDT_BTC_LATEST.csv', 'r') as f:
+        reader = csv.reader(f, delimiter=',')
+        next(reader)
+        for row in reader:
+            history_data.append(float(row[1]))
+            # print(float(row[1]))
+        return history_data
+
 price_data = tradecl.ReadPoloniexCSV()
+
+
 np.set_printoptions(threshold=np.inf)
 print("price_data idx 0-10"+str(price_data[0:10]))
 print("price_data idx last 10"+str(price_data[-1]))
