@@ -76,7 +76,7 @@ protobuf==3.6.1
 psutil==5.4.7
 ptyprocess==0.6.0
 pubnub==4.1.0
-py==1.5.4
+py==1.10.0
 pybitflyer==0.1.9
 pycodestyle==2.4.0
 pycryptodomex==3.6.3
