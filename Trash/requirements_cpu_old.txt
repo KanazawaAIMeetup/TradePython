@@ -109,7 +109,7 @@ swagger-client==1.0.0
 tables==3.4.2
 tensorboard==1.10.0
 tensorboardX==0.8
-tensorflow==1.10.0
+tensorflow==2.7.2
 tensorflow-tensorboard==0.1.8
 tensorforce==0.3.5.1
 termcolor==1.1.0
