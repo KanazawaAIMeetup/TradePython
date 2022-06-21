@@ -23,7 +23,7 @@ jsonlines==1.2.0
 kiwisolver==1.1.0
 MarkupSafe==1.1.1
 matplotlib==3.0.3
-numpy==1.17.0
+numpy==1.22.0
 Pillow==6.1.0
 poloniex==0.0.17
 protobuf==3.7.1
