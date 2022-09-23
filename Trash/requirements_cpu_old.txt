@@ -72,7 +72,7 @@ poloniex==0.0.13
 powerline-status==2.6
 prometheus-client==0.3.0
 prompt-toolkit==1.0.15
-protobuf==3.6.1
+protobuf==3.18.3
 psutil==5.4.7
 ptyprocess==0.6.0
 pubnub==4.1.0
