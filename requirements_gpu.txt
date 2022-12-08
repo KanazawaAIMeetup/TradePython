@@ -1,7 +1,7 @@
 absl-py==0.7.1
 astor==0.8.0
 cached-property==1.5.1
-certifi==2018.8.24
+certifi==2022.12.7
 chainer==6.2.0
 chainerrl==0.5.0
 chardet==3.0.4
